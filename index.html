@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍅 ポモドーロタイマー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 2rem 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 5px;
+            margin: 2rem 0;
+            height: 30px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, #ff6b6b, #ee5a24);
+        }
+
+        .work-mode {
+            background: linear-gradient(90deg, #2ecc71, #27ae60) !important;
+        }
+
+        .break-mode {
+            background: linear-gradient(90deg, #3498db, #2980b9) !important;
+        }
+
+        .status {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+
+        .work-status {
+            color: #2ecc71;
+        }
+
+        .break-status {
+            color: #3498db;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .pause-btn {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .setting-group label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .setting-group input {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1rem;
+            width: 80px;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .cycle-info {
+            font-size: 1.2rem;
+            margin: 1rem 0;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .timer-display {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍅 ポモドーロタイマー</h1>
+        
+        <div class="timer-display" id="timer">25:00</div>
+        
+        <div class="progress-container">
+            <div class="progress-bar work-mode" id="progress" style="width: 0%"></div>
+        </div>
+        
+        <div class="status work-status" id="status">作業時間</div>
+        
+        <div class="cycle-info" id="cycleInfo">サイクル 1</div>
+        
+        <div class="controls">
+            <button class="start-btn" id="startBtn" onclick="startTimer()">開始</button>
+            <button class="pause-btn" id="pauseBtn" onclick="pauseTimer()">一時停止</button>
+            <button class="reset-btn" id="resetBtn" onclick="resetTimer()">リセット</button>
+        </div>
+        
+        <div class="settings">
+            <div class="setting-group">
+                <label>作業時間</label>
+                <input type="number" id="workTime" value="25" min="1" max="120">
+                <small>分</small>
+            </div>
+            <div class="setting-group">
+                <label>休憩時間</label>
+                <input type="number" id="breakTime" value="5" min="1" max="60">
+                <small>分</small>
+            </div>
+            <div class="setting-group">
+                <label>サイクル数</label>
+                <input type="number" id="cycles" value="4" min="1" max="20">
+                <small>回</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let timer = null;
+        let timeLeft = 25 * 60; // 25 minutes in seconds
+        let totalTime = 25 * 60;
+        let isRunning = false;
+        let isWorkTime = true;
+        let currentCycle = 1;
+        let maxCycles = 4;
+
+        const timerDisplay = document.getElementById('timer');
+        const progressBar = document.getElementById('progress');
+        const statusElement = document.getElementById('status');
+        const cycleInfo = document.getElementById('cycleInfo');
+        const startBtn = document.getElementById('startBtn');
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(timeLeft);
+            
+            const progress = ((totalTime - timeLeft) / totalTime) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            if (isWorkTime) {
+                statusElement.textContent = '作業時間';
+                statusElement.className = 'status work-status';
+                progressBar.className = 'progress-bar work-mode';
+            } else {
+                statusElement.textContent = '休憩時間';
+                statusElement.className = 'status break-status';
+                progressBar.className = 'progress-bar break-mode';
+            }
+            
+            cycleInfo.textContent = `サイクル ${currentCycle}/${maxCycles}`;
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                startBtn.textContent = '実行中...';
+                startBtn.disabled = true;
+                
+                timer = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        completePhase();
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            if (isRunning) {
+                clearInterval(timer);
+                isRunning = false;
+                startBtn.textContent = '再開';
+                startBtn.disabled = false;
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            isRunning = false;
+            isWorkTime = true;
+            currentCycle = 1;
+            
+            const workMinutes = parseInt(document.getElementById('workTime').value) || 25;
+            maxCycles = parseInt(document.getElementById('cycles').value) || 4;
+            
+            timeLeft = workMinutes * 60;
+            totalTime = workMinutes * 60;
+            
+            startBtn.textContent = '開始';
+            startBtn.disabled = false;
+            
+            updateDisplay();
+        }
+
+        function completePhase() {
+            clearInterval(timer);
+            isRunning = false;
+            
+            // Play notification sound
+            playNotificationSound();
+            
+            if (isWorkTime) {
+                // Switch to break
+                isWorkTime = false;
+                const breakMinutes = parseInt(document.getElementById('breakTime').value) || 5;
+                timeLeft = breakMinutes * 60;
+                totalTime = breakMinutes * 60;
+                
+                alert('🎉 作業時間終了！休憩時間です。');
+            } else {
+                // Switch to work
+                currentCycle++;
+                
+                if (currentCycle > maxCycles) {
+                    alert('🏆 全サイクル完了！お疲れ様でした！');
+                    resetTimer();
+                    return;
+                }
+                
+                isWorkTime = true;
+                const workMinutes = parseInt(document.getElementById('workTime').value) || 25;
+                timeLeft = workMinutes * 60;
+                totalTime = workMinutes * 60;
+                
+                alert('☕ 休憩終了！次の作業を始めましょう。');
+            }
+            
+            startBtn.textContent = '開始';
+            startBtn.disabled = false;
+            updateDisplay();
+        }
+
+        function playNotificationSound() {
+            // Create audio context for notification sound
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+            } catch (error) {
+                console.log('Audio notification not supported');
+            }
+        }
+
+        // Initialize display
+        updateDisplay();
+
+        // Auto-save settings
+        document.getElementById('workTime').addEventListener('change', resetTimer);
+        document.getElementById('breakTime').addEventListener('change', resetTimer);
+        document.getElementById('cycles').addEventListener('change', resetTimer);
+    </script>
+</body>
+</html>
